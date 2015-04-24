@@ -23,6 +23,7 @@ tank-auth authentication for CI.
 * Create with Simple Methodology, Skinny Controller, Skinny Model, Fat Library (let complexity in one place) :D
 * Using No Captcha from google
 * Configuration flexibility in app/otentikasi.php
+* Multilanguage for notification, see in resouces/lang/en/otentikasi.php
 * Registration
 * Activation
 * Login with attempt system
