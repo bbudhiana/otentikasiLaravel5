@@ -13,8 +13,8 @@ return [
         | atau dengan helper : $value = config('keamanan.website_name');
         |
 	*/
-    'website_name' => 'bnabe.com',
-    'website_email' => 'budhiana.bana@gmail.com',
+    'website_name' => 'your-site.com',
+    'website_email' => 'your-email@your-site.com',
 
     /*
         |--------------------------------------------------------------------------
