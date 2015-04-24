@@ -5,10 +5,11 @@ Actually, before i learn laravel, i choose Codeigniter for doing my everyday wor
 until they came with bad information, which that framework would not continued (deprecated).
 
 Okey then... live must go on, i must switch fast to learn other framework, and continue to observation :
-1. Zend : to complex to me, i really confuse about their explanation
-2. Symfony : good framework, but i feel 'rigid', i lost flexibility to explore my idea to the code.
-3. Laravel 4 : good framework, but i feel not right when you 'bind' everything in one time
-4. Laravel 5 : my choice that fit everything aspect i need.
+
+- Zend : to complex to me, i really confuse about their explanation, i am to stupid to learn this framework
+- Symfony : good framework, but i feel 'rigid', i lost flexibility to explore my idea to the code.
+- Laravel 4 : good framework, but i feel not right when you 'bind' everything in one time
+- Laravel 5 : my choice that fit everything aspect i need.
 
 Wow... but wait, how about everything i do in Codeigniter, such as Authentication Modul, oke then here we are
 Laravel 5 with Otentikasi Code (Otentikasi is indonesian language for 'Authentication').
