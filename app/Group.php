@@ -11,12 +11,13 @@ class Group extends Model {
      */
     protected $table = 'groups';
 
+
     /*
-     * relation one to many with users
+     * relasi dengan table userprofiles
      */
-    public function users()
+    public function userprofiles()
     {
-        return $this->hasMany('App\User');
+        return $this->hasMany('App\Userprofile');
     }
 
 }

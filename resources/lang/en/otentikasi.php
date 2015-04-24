@@ -2,21 +2,21 @@
 
 return [
 
-	/*
-	|--------------------------------------------------------------------------
-	| Keamanan Language Lines
-	|--------------------------------------------------------------------------
-	|
-	| The following language lines are the default lines which match reasons
-	| that are given by the otentikasi for all process, such as for an invalid
+    /*
+    |--------------------------------------------------------------------------
+    | Otentikasi Language Lines
+    |--------------------------------------------------------------------------
+    |
+    | The following language lines are the default lines which match reasons
+    | that are given by the keamanan for all process, such as for an invalid
     | login or invalid register.
-	|
-	*/
+    |
+    */
 
-	"banned"                    => "We can't let a user log in the system.",
-	"not_activated"             => "The account not activated yet",
-	"incorrect_password"        => "Incorrect password",
-	"incorrect_login"           => "Incorrect login",
+    "banned"                    => "We can't let a user log in the system.",
+    "not_activated"             => "The account not activated yet",
+    "incorrect_password"        => "Incorrect password",
+    "incorrect_login"           => "Incorrect login",
     "incorrect_email_username"  => "Incorrect email or username",
     "not_available_email"       => "Email not available on this site, maybe you are not member",
     "success_login"             => "login success",
@@ -25,10 +25,12 @@ return [
     "activation_success"        => "The activation code successfull.",
     "activate_new_email_failed" => "The activation new email you entered is incorrect or expired.",
     "activate_new_email_success" => "The activation new email successfull.",
+    "activate_send_again"        => "An email with instructions for activating your account has been sent to you.",
     "old_password"              => "Incorrect password",
     "email"                     => "Email is already used by another user. Please choose another email.",
     "current_email"             => "This is your current email.",
     "username"                  => "Username already exists. Please choose another username.",
+    "current_username"          => "This is your current username.",
     "update_style"              => "Update Style Error",
     "create_style"              => "Create Style Error",
     "upload"                    => "Upload file has failed",

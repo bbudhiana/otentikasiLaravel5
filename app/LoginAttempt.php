@@ -12,6 +12,11 @@ class LoginAttempt extends Model {
     protected $table = 'login_attempts';
 
     /**
+     * The attributes that have dates type column
+     */
+    protected $dates = ['time'];
+
+    /**
      * Get number of attempts to login occured from given IP-address or login
      *
      * @param	string

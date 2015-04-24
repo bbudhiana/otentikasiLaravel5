@@ -18,19 +18,6 @@ return [
 
     /*
         |--------------------------------------------------------------------------
-        | Security Settings
-        |--------------------------------------------------------------------------
-        |
-        | 'phpass_hash_portable' = Can passwords be dumped and exported to another server.
-        |                          If set to FALSE then you won't be able to use this database on another server.
-        | 'phpass_hash_strength' = Password hash strength.
-        |
-	*/
-    'phpass_hash_portable' => 'FALSE',
-    'phpass_hash_strength' => 8,
-
-    /*
-        |--------------------------------------------------------------------------
         | Registration settings
         |--------------------------------------------------------------------------
         |
@@ -87,18 +74,6 @@ return [
 
     /*
         |--------------------------------------------------------------------------
-        | Auto login settings
-        |--------------------------------------------------------------------------
-        |
-        | 'autologin_cookie_name' = Auto login cookie name.
-        | 'autologin_cookie_life' = Auto login cookie life before expired. Default is 2 months (60*60*24*31*2).
-        |--------------------------------------------------------------------------
-    */
-    'autologin_cookie_name' => 'autologin',
-    'autologin_cookie_life' => 60 * 60 * 24 * 31 * 2,
-
-    /*
-        |--------------------------------------------------------------------------
         | Forgot password settings
         |--------------------------------------------------------------------------
         |
@@ -107,14 +82,4 @@ return [
     */
     'forgot_password_expire' => 60 * 15,
 
-    /*
-        |--------------------------------------------------------------------------
-        | Database settings
-        |--------------------------------------------------------------------------
-        |
-        | 'db_table_prefix' = Table prefix that will be prepended to every table name used by the library
-        | (except 'ci_sessions' table).
-        |--------------------------------------------------------------------------
-    */
-    'db_table_prefix' => '',
 ];

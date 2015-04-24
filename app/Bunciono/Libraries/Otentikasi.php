@@ -5,8 +5,8 @@ use Request;
 use Lang;
 use Carbon;
 use Mail;
-use BuncionoNet\LoginAttempt;
-use BuncionoNet\User;
+use App\LoginAttempt;
+use App\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Foundation\Console\Tinker\Presenters\IlluminateApplicationPresenter;
@@ -26,74 +26,6 @@ class Otentikasi
     static $error = array();
 
     /**
-     * Login process alternative
-     *
-     * @param $datalogin
-     * @return string
-     */
-    public function login($datalogin)
-    {
-        if ((strlen($datalogin['login']) > 0) and (strlen($datalogin['password']) > 0)) {
-
-            /* Which function to use to login (based on config) */
-            if (LOGIN_BY_USERNAME and LOGIN_BY_EMAIL) {
-                $get_user_func = 'getUserByLogin';
-            } else if (LOGIN_BY_USERNAME) {
-                $get_user_func = 'getUserByUsername';
-            } else {
-                $get_user_func = 'getUserByEmail';
-            }
-
-            $datauser = User::$get_user_func($datalogin['login']);
-
-            if (!is_null($user = $datauser->first())) { // login ok
-
-                /* upgrade password dari md5 ke milik laravel, berfungsi jika password sebelumnya adalah MD5 */
-                if (md5($datalogin['password']) === $user->password) {
-                    $user->password = Hash::make($datalogin['password']);
-                    $user->save();
-                }
-
-                /* assign data login to array */
-                $login_data = array(
-                    'password' => $datalogin['password'],
-                    //'activated' => 1,
-                    'banned' => 0
-                );
-
-                /* check what is login ? email or username */
-                if (!filter_var($datalogin['login'], FILTER_VALIDATE_EMAIL)) {
-                    $login_data['username'] = $user->username;
-                } else {
-                    $login_data['email'] = $user->email;
-                }
-
-                if (Auth::attempt($login_data, isset($datalogin['remember']) ? TRUE : FALSE)) {
-                    $this->clearLoginAttempts($datalogin['login']);
-
-                    $this->updateLoginInfo($user, Config::get('otentikasi.login_record_ip'), Config::get('otentikasi.login_record_time'));
-                    //$this->error = array('success_login' => Lang::get(KEAMANAN_SUCCESS_LOGIN));
-                } else { // fail
-                    $this->increaseLoginAttempt($datalogin['login']);
-                    if ($user->banned == 1) { // fail - banned
-                        self::$error = array('banned' => Lang::get('otentikasi.banned'));
-                    } else if ($user->activated == 0) { // fail - not activated
-                        self::$error = array('not_activated' => Lang::get('otentikasi.not_activated'));
-                    } else if (!Hash::check($datalogin['password'], $user->password)) { // fail - wrong password
-                        self::$error = array('incorrect_password' => Lang::get('otentikasi.incorrect_password'));
-                    } else {
-                        self::$error = array('incorrect_login' => Lang::get('otentikasi.incorrect_login'));
-                    }
-                }
-            } else { // fail - wrong login
-                $this->increaseLoginAttempt($datalogin['login']);
-                self::$error = array('incorrect_login' => Lang::get('otentikasi.incorrect_login'));
-            }
-        }
-        return self::getErrorMessage();
-    }
-
-    /**
      * Clear all attempt records for given IP-address and login
      * (if attempts to login is being counted)
      *
@@ -103,7 +35,7 @@ class Otentikasi
     private function clearLoginAttempts($login)
     {
         if (Config::get('otentikasi.login_count_attempts')) {
-            $expire_period = Config::get('otentikasi.login_attempt_expire')==0 ? 86400 : Config::get('otentikasi.login_attempt_expire');
+            $expire_period = Config::get('otentikasi.login_attempt_expire') == 0 ? 86400 : Config::get('otentikasi.login_attempt_expire');
             $size_expired = time() - $expire_period;
             $time_expire_periode = Carbon\Carbon::createFromTimestamp($size_expired);
 
@@ -132,7 +64,7 @@ class Otentikasi
         if ($record_ip)
             $user->last_ip = Request::getClientIp();
         if ($record_time)
-            $user->last_login = date('Y-m-d H:i:s');
+            $user->last_login = Carbon\Carbon::now();
         $user->save();
     }
 
@@ -202,7 +134,6 @@ class Otentikasi
         }
 
         /* run the validation rules on the inputs from the form */
-        /*$validator = Validator::make($datalogin, $rules, $messages);*/
         $validator = Validator::make($datalogin, $rules);
 
         /* this validation is from database perspective */
@@ -211,42 +142,6 @@ class Otentikasi
         });
 
         return $validator;
-    }
-
-    /**
-     * Login success on the site.
-     * when validation process do not result error
-     *
-     * @param    array (username or email or both depending on settings in config file)
-     * @return   string
-     */
-    public function loginSuccess($datalogin)
-    {
-        /* assign data login to array */
-        $login_data = array(
-            'password' => $datalogin['password'],
-            'activated' => 1,
-            'banned' => 0
-        );
-
-        /* check what is login ? email or username */
-        if (!filter_var($datalogin['login'], FILTER_VALIDATE_EMAIL)) {
-            $login_data['username'] = $datalogin['login'];
-        } else {
-            $login_data['email'] = $datalogin['login'];
-        }
-
-        $this->clearLoginAttempts($datalogin['login']);
-
-        /* upgrade password dari md5 ke milik laravel, berfungsi jika password sebelumnya adalah MD5 */
-        if (md5($datalogin['password']) === Auth::user()->password) {
-            Auth::user()->password = Hash::make($datalogin['password']);
-            Auth::user()->save();
-        }
-
-        $this->updateLoginInfo(Auth::user(), Config::get('otentikasi.login_record_ip'), Config::get('otentikasi.login_record_time'));
-        $message = Lang::get('otentikasi.success_login');
-        return $message;
     }
 
     /**
@@ -275,7 +170,7 @@ class Otentikasi
                 /* assign data login to array */
                 $login_data = array(
                     'password' => $datalogin['password'],
-                    'activated' => 1,
+                    //'activated' => 1,
                     'banned' => 0
                 );
 
@@ -304,6 +199,30 @@ class Otentikasi
                 $validator->errors()->add('incorrect_login', Lang::get('otentikasi.incorrect_login'));
             }
         }
+    }
+
+    /**
+     * Login success on the site.
+     * when validation process do not result error
+     *
+     * @param    array (username or email or both depending on settings in config file)
+     * @return   string
+     */
+    public function loginSuccess($datalogin)
+    {
+        /* clear the login attempts */
+        $this->clearLoginAttempts($datalogin['login']);
+
+        /* upgrade password dari md5 ke milik laravel, berfungsi jika password sebelumnya adalah MD5 */
+        if (md5($datalogin['password']) === Auth::user()->password) {
+            Auth::user()->password = Hash::make($datalogin['password']);
+            Auth::user()->save();
+        }
+
+        /* update user info login */
+        $this->updateLoginInfo(Auth::user(), Config::get('otentikasi.login_record_ip'), Config::get('otentikasi.login_record_time'));
+        $message = Lang::get('otentikasi.success_login');
+        return $message;
     }
 
     /**
@@ -354,10 +273,10 @@ class Otentikasi
     public function registerValidation($dataregister)
     {
         /* Which rules to use to validation (based on config) */
-        $rules['username'] = 'required|unique:users';
+        $rules['username'] = 'required|alpha_dash|unique:users'.'|min:'. Config::get('keamanan.username_min_length').'|max:'. Config::get('keamanan.username_max_length') ;
         $rules['email'] = 'required|email|unique:users';
-        $rules['password'] = 'required|confirmed|min:3';
-        $rules['password_confirmation'] = 'required|min:3';
+        $rules['password'] = 'required|confirmed'.'|min:'. Config::get('keamanan.password_min_length').'|max:'. Config::get('keamanan.password_max_length');
+        $rules['password_confirmation'] = 'required'.'|min:'. Config::get('keamanan.password_min_length').'|max:'. Config::get('keamanan.password_max_length');
         $rules['fullname'] = 'required';
         if (Config::get('otentikasi.captcha_registration')) {
             $rules['g-recaptcha-response'] = 'required|captcha';
@@ -446,7 +365,7 @@ class Otentikasi
      */
     public static function activateUser($user_id, $activation_key, $activate_by_email = TRUE)
     {
-        $expire_period = Config::get('otentikasi.email_activation_expire')==0 ? 172800 : Config::get('otentikasi.email_activation_expire');
+        $expire_period = Config::get('otentikasi.email_activation_expire') == 0 ? 172800 : Config::get('otentikasi.email_activation_expire');
         $size_expired = time() - $expire_period;
         $time_expire_periode = Carbon\Carbon::createFromTimestamp($size_expired);
 
@@ -604,19 +523,20 @@ class Otentikasi
     /**
      * Check if given password key is valid and user is authenticated.
      *
-     * @param	string
-     * @param	string
-     * @return	bool
+     * @param    string
+     * @param    string
+     * @return    bool
      */
-    public static function canResetPassword($user_id, $new_pass_key) {
-        $expire_period = Config::get('otentikasi.forgot_password_expire')==0 ? 900 : Config::get('otentikasi.forgot_password_expire');
+    public static function canResetPassword($user_id, $new_pass_key)
+    {
+        $expire_period = Config::get('otentikasi.forgot_password_expire') == 0 ? 900 : Config::get('otentikasi.forgot_password_expire');
         $size_expired = time() - $expire_period;
         $time_expire_periode = Carbon\Carbon::createFromTimestamp($size_expired);
 
-        if ((strlen($user_id) > 0) and ( strlen($new_pass_key) > 0)) {
-             if(User::canResetPassword($user_id, $new_pass_key,$time_expire_periode)->count()==1){
+        if ((strlen($user_id) > 0) and (strlen($new_pass_key) > 0)) {
+            if (User::canResetPassword($user_id, $new_pass_key, $time_expire_periode)->count() == 1) {
                 return NULL;
-             }
+            }
         }
         self::$error = array('forgot_expired' => Lang::get('otentikasi.forgot_expired'));
         return self::getErrorMessage();
@@ -630,7 +550,7 @@ class Otentikasi
      */
     public function resetPasswordValidation($dataresetpassword)
     {
-        $rules['email'] = 'required|email';
+        //$rules['email'] = 'required|email';
         $rules['password'] = 'required|confirmed|min:3';
         $rules['password_confirmation'] = 'required|min:3';
 
@@ -654,10 +574,10 @@ class Otentikasi
     private function resetPasswordDbInvalid($validator, $dataresetpassword)
     {
         $user_id = $dataresetpassword['user_id'];
-        $new_pass_key =  $dataresetpassword['token_key'];
+        $new_pass_key = $dataresetpassword['token_key'];
         $new_password = $dataresetpassword['password'];
 
-        if ((strlen($user_id) > 0) and ( strlen($new_pass_key) > 0) and ( strlen($new_password) > 0)) {
+        if ((strlen($user_id) > 0) and (strlen($new_pass_key) > 0) and (strlen($new_password) > 0)) {
             $datauser = User::getUserById($user_id, TRUE);
 
             /* check apakah user itu ada */
@@ -666,10 +586,10 @@ class Otentikasi
             }
 
             /* check waktu reset password belum expired */
-            $expire_period = Config::get('otentikasi.forgot_password_expire')==0 ? 900 : Config::get('otentikasi.forgot_password_expire');
+            $expire_period = Config::get('otentikasi.forgot_password_expire') == 0 ? 900 : Config::get('otentikasi.forgot_password_expire');
             $size_expired = time() - $expire_period;
             $time_expire_periode = Carbon\Carbon::createFromTimestamp($size_expired);
-            if(User::canResetPassword($user_id, $new_pass_key,$time_expire_periode)->count()==0){
+            if (User::canResetPassword($user_id, $new_pass_key, $time_expire_periode)->count() == 0) {
                 $validator->errors()->add('forgot_expired', Lang::get('otentikasi.forgot_expired'));
             }
 
@@ -686,16 +606,16 @@ class Otentikasi
     public function resetPasswordSuccess($dataresetpassword)
     {
         $user_id = $dataresetpassword['user_id'];
-        $new_pass_key =  $dataresetpassword['token_key'];
+        $new_pass_key = $dataresetpassword['token_key'];
         $new_password = $dataresetpassword['password'];
 
         $hashed_password = Hash::make($new_password);
 
-        $expire_period = Config::get('otentikasi.forgot_password_expire')==0 ? 900 : Config::get('otentikasi.forgot_password_expire');
+        $expire_period = Config::get('otentikasi.forgot_password_expire') == 0 ? 900 : Config::get('otentikasi.forgot_password_expire');
         $size_expired = time() - $expire_period;
         $time_expire_periode = Carbon\Carbon::createFromTimestamp($size_expired);
 
-        if ($user=User::resetPassword($user_id, $hashed_password, $new_pass_key, $time_expire_periode)) { // success
+        if ($user = User::resetPassword($user_id, $hashed_password, $new_pass_key, $time_expire_periode)) { // success
             $data = array('user_id' => $user_id, 'username' => $user->username, 'email' => $user->email, 'new_password' => $new_password);
         }
         $data ['site_name'] = Config::get('otentikasi.website_name');
@@ -704,6 +624,243 @@ class Otentikasi
         self::_sendEmail('reset_password', $data ['email'], $data);
         /* return message */
         $message = Lang::get('otentikasi.reset_success');
+        return $message;
+    }
+
+    /**
+     * Check the validation form of send again
+     *
+     * $param array
+     * $return object
+     */
+    public function sendAgainValidation($datasendagain)
+    {
+        $rules['email'] = 'required|email';
+
+        /* run the validation rules on the inputs from the form */
+        $validator = Validator::make($datasendagain, $rules);
+
+        /* this validation is from database perspective */
+        $validator->after(function ($validator) use ($datasendagain) {
+            $this->sendAgainDbInvalid($validator, $datasendagain);
+        });
+
+        return $validator;
+    }
+
+    /**
+     * Check if send Again invalid in DB perspective
+     *
+     * @param string
+     * @return bool
+     */
+    private function sendAgainDbInvalid($validator, $datasendagain)
+    {
+        if (strlen($datasendagain['email']) > 0 && (!$this->changeEmail($datasendagain['email']))) {
+            $validator->errors()->add('email', Lang::get('otentikasi.email'));
+        }
+
+    }
+
+    /**
+     * Change email for activation and return some data about user:
+     * user_id, username, email, new_email_key.
+     * Can be called for not activated users only.
+     *
+     * @param $email
+     * @return bool
+     */
+    private function changeEmail($email)
+    {
+
+        if (strtolower(Auth::user()->email) == strtolower($email)) { //email verifikasi sama
+            return TRUE;
+        } elseif ($this->isEmailAvailable($email)) {  //email verifikasi baru dan tidak ada dalam database
+            return TRUE;
+        } else {
+            return FALSE;
+        }
+        return FALSE;
+
+    }
+
+    /**
+     * Change username for activation and return some data about user:
+     * user_id, username, email, new_email_key.
+     * Can be called for not activated users only.
+     *
+     * @param $email
+     * @return bool
+     */
+    private function changeUsername($username)
+    {
+
+        if (strtolower(Auth::user()->username) == strtolower($username)) { //email verifikasi sama
+            return TRUE;
+        } elseif ($this->isUsernameAvailable($username)) {  //email verifikasi baru dan tidak ada dalam database
+            return TRUE;
+        } else {
+            return FALSE;
+        }
+        return FALSE;
+
+    }
+
+    /**
+     * Send Again success on the site.
+     * when validation process do not result error
+     *
+     * @param    array (username or email or both depending on settings in config file)
+     * @return   string
+     */
+    public function sendAgainSuccess($datasendagain)
+    {
+        $user = Auth::user();
+        $data = array('user_id' => $user->id, 'username' => $user->username, 'email' => $datasendagain['email']);
+
+        if (strtolower(Auth::user()->email) == strtolower($datasendagain['email'])) { //email verifikasi sama
+            $data ['new_email_key'] = $user->new_email_key;
+        } else {  //email verifikasi baru dan tidak ada dalam database
+            $data ['new_email_key'] = md5(rand() . microtime());
+            User::setNewEmail($user->id, $datasendagain['email'], $data ['new_email_key'], FALSE);
+        }
+
+        /* send again verification code to email or new email */
+        $data ['site_name'] = Config::get('otentikasi.website_name');
+        $data ['activation_period'] = Config::get('otentikasi.email_activation_expire') / 3600;
+
+        // Send email with password activation link
+        $this->_sendEmail('activate', $data ['email'], $data);
+        $message = Lang::get('otentikasi.activate_send_again');
+        /* logout process for login agin */
+        Auth::logout();
+        return $message;
+    }
+
+    /**
+     * Update Profile validation form of register
+     *
+     * $param array
+     * $return object
+     */
+    public function updateProfileValidation($dataprofile)
+    {
+        /* Which rules to use to validation (based on config) */
+        $rules['fullname'] = 'required';
+
+        /* run the validation rules on the inputs from the form */
+        $validator = Validator::make($dataprofile, $rules);
+
+        return $validator;
+    }
+
+    /**
+     * update profile success on the site.
+     * when validation process do not result error
+     *
+     * @param    array (username or email or both depending on settings in config file)
+     * @return   string
+     */
+    public function updateProfileSuccess($dataprofile)
+    {
+        $user = Auth::user();
+        $user->userprofile->fullname = $dataprofile['fullname'];
+        $user->userprofile->phone = $dataprofile['phone'];
+        if ($dataprofile['day_of_birth'])
+            $user->userprofile->day_of_birth = Carbon\Carbon::parse($dataprofile['day_of_birth']);
+        //$user->userprofile->day_of_birth = Carbon\Carbon::createFromFormat('Y-m-d', $dataprofile['day_of_birth']);
+        $user->userprofile->save();
+
+        $message = Lang::get('otentikasi.update_userprofile_success');
+        return $message;
+    }
+
+    /**
+     * Update Account validation form of register
+     *
+     * $param array
+     * $return object
+     */
+    public function updateAccountValidation($dataaccount)
+    {
+        /* Which rules to use to validation (based on config) */
+        $rules['username'] = 'required|alpha_dash'.'|min:'. Config::get('keamanan.username_min_length').'|max:'. Config::get('keamanan.username_max_length');
+        $rules['email'] = 'required|email';
+        if (strlen($dataaccount['password']) > 0 || strlen($dataaccount['password_confirmation']) > 0) {
+            $rules['password'] = 'required|confirmed'.'|min:'. Config::get('keamanan.password_min_length').'|max:'. Config::get('keamanan.password_max_length');
+            $rules['password_confirmation'] = 'required'.'|min:'. Config::get('keamanan.password_min_length').'|max:'. Config::get('keamanan.password_max_length');
+        }
+
+        /* run the validation rules on the inputs from the form */
+        $validator = Validator::make($dataaccount, $rules);
+
+        /* this validation is from database perspective */
+        $validator->after(function ($validator) use ($dataaccount) {
+            $this->updateAccountDbInvalid($validator, $dataaccount);
+        });
+
+        return $validator;
+    }
+
+    /**
+     * Check if update Account invalid in DB perspective
+     *
+     * @param string
+     * @return bool
+     */
+    private function updateAccountDbInvalid($validator, $dataaccount)
+    {
+        /* user change his/her email */
+        if (strtolower(Auth::user()->email) <> strtolower($dataaccount['email'])) { //check if user input same email
+            if (strlen($dataaccount['email']) > 0 && (!$this->changeEmail($dataaccount['email']))) { //check if other user using new email
+                $validator->errors()->add('email', Lang::get('otentikasi.email'));
+            }
+        }
+
+        /* user change his/her username */
+        if (strtolower(Auth::user()->username) <> strtolower($dataaccount['username'])) { //check if user input same username
+            if (strlen($dataaccount['username']) > 0 && (!$this->changeUsername($dataaccount['username']))) { //check if other user using new username
+                $validator->errors()->add('email', Lang::get('otentikasi.username'));
+            }
+        }
+
+    }
+
+    /**
+     * update account success on the site.
+     * when validation process do not result error
+     *
+     * @param    array (username or email or both depending on settings in config file)
+     * @return   string
+     */
+    public function updateAccountSuccess($dataaccount)
+    {
+        $user = Auth::user();
+
+        /* update data user account, not include email */
+        $user->username = $dataaccount['username'];
+        $user->password = Hash::make($dataaccount['password']);
+        $user->last_ip = Request::getClientIp();
+        $user->new_email = NULL;
+        $user->new_email_key = NULL;
+        $user->save();
+
+        /* jika email mengalami perubahan maka lakukan prosedur ubah email */
+        if (strtolower($user->email) <> strtolower($dataaccount['email'])) {
+
+            $data = array('user_id' => $user->id, 'username' => $user->username, 'new_email' => $dataaccount['email']);
+            $data ['site_name'] = Config::get('otentikasi.website_name');
+            $data ['new_email_key'] = md5(rand() . microtime());
+
+            User::setNewEmail($user->id, $dataaccount['email'], $data ['new_email_key'], TRUE);
+            // Send email with password activation link
+            $this->_sendEmail('change_email', $dataaccount['email'], $data);
+            $message = Lang::get('otentikasi.change_user_email_success');
+        } else {
+            $message = Lang::get('otentikasi.update_userprofile_success');
+        }
+
+        unset($dataaccount ['password']); // Clear password (just for any case)
         return $message;
     }
 

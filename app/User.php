@@ -32,20 +32,16 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
 	protected $hidden = ['password', 'remember_token'];
 
 	/**
+	 * The attributes that have dates type column
+	 */
+	protected $dates = ['last_login'];
+
+	/**
 	 * Dengan table userprofiles berelasi ONE TO ONE
 	 */
 	public function userprofile() {
 		return $this->hasOne('App\Userprofile', 'user_id', 'id');
 	}
-
-	/**
-	 * Dengan table groups berelasi ONE TO MANY
-	 */
-	public function group()
-	{
-		return $this->belongsTo('App\Group');
-	}
-
 
 	/**
 	 * Get user record by login (username or email) with scope
@@ -113,8 +109,6 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
 		return $query->whereRaw('LOWER(email)=? OR LOWER(new_email)=?', array(strtolower($email), strtolower($email)));
 	}
 
-
-
 	/**
 	 * Create new user record
 	 * with scope
@@ -128,10 +122,8 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
 		/* new user profile */
 		$userprofile = new Userprofile;
 		$userprofile->fullname = $data['fullname'];
-		$userprofile->created_at = date('Y-m-d H:i:s');
 
 		/* new user */
-		$data['created_at'] = date('Y-m-d H:i:s');
 		$data['activated'] = $activated ? 1 : 0;
 
 		$user = New User;
@@ -140,9 +132,8 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
 		$user->password = $data['password'];
 		$user->banned = 0;
 		$user->last_ip = $data['last_ip'];
-		$user->last_login = date('Y-m-d H:i:s');
+		//$user->last_login = date('Y-m-d H:i:s');
 		$user->new_email_key = isset($data ['new_email_key']) ? $data ['new_email_key'] : NULL;
-		$user->created_at = $data['created_at'];
 		$user->activated = $data['activated'];
 		$user->save();
 		$user->userprofile()->save($userprofile);
@@ -232,6 +223,29 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
 		$user->save();
 		//return $user->count() > 0;
 		return $user;
+	}
+
+	/**
+	 * Set new email for user (may be activated or not).
+	 * The new email cannot be used for login or notification before it is activated.
+	 * with scope
+	 *
+	 * @param	int
+	 * @param	string
+	 * @param	string
+	 * @param	bool
+	 * @return	bool
+	 */
+	public static function setNewEmail($user_id, $new_email, $new_email_key, $activated) {
+		$user = User::where('id', '=', $user_id)
+			->where('activated', '=', $activated ? 1 : 0)
+			->first();
+		$email_or_new_email = $activated ? 'new_email' : 'email';
+		$user->$email_or_new_email = $new_email;
+		$user->new_email_key = $new_email_key;
+		$user->save();
+
+		return $user->count() > 0;
 	}
 
 }

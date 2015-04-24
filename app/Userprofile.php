@@ -18,4 +18,11 @@ class Userprofile extends Model {
         return $this->belongsTo('App\User', 'user_id', 'id');
     }
 
+    /**
+     * Dengan table group berelasi ONE TO MANY
+     */
+    public function group() {
+        return $this->belongsTo('App\Group', 'group_id', 'id');
+    }
+
 }
