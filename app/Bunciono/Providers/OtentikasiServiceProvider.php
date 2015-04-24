@@ -35,7 +35,7 @@ class OtentikasiServiceProvider extends ServiceProvider {
 	{
 		$this->app->singleton('otentikasi', function()
 		{
-			return new \App\Bunciono\Libraries\Keamanan;
+			return new \App\Bunciono\Libraries\Otentikasi;
 		});
 
 	}

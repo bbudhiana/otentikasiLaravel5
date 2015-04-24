@@ -273,10 +273,10 @@ class Otentikasi
     public function registerValidation($dataregister)
     {
         /* Which rules to use to validation (based on config) */
-        $rules['username'] = 'required|alpha_dash|unique:users'.'|min:'. Config::get('keamanan.username_min_length').'|max:'. Config::get('keamanan.username_max_length') ;
+        $rules['username'] = 'required|alpha_dash|unique:users'.'|min:'. Config::get('otentikasi.username_min_length').'|max:'. Config::get('otentikasi.username_max_length') ;
         $rules['email'] = 'required|email|unique:users';
-        $rules['password'] = 'required|confirmed'.'|min:'. Config::get('keamanan.password_min_length').'|max:'. Config::get('keamanan.password_max_length');
-        $rules['password_confirmation'] = 'required'.'|min:'. Config::get('keamanan.password_min_length').'|max:'. Config::get('keamanan.password_max_length');
+        $rules['password'] = 'required|confirmed'.'|min:'. Config::get('otentikasi.password_min_length').'|max:'. Config::get('otentikasi.password_max_length');
+        $rules['password_confirmation'] = 'required'.'|min:'. Config::get('otentikasi.password_min_length').'|max:'. Config::get('otentikasi.password_max_length');
         $rules['fullname'] = 'required';
         if (Config::get('otentikasi.captcha_registration')) {
             $rules['g-recaptcha-response'] = 'required|captcha';
@@ -784,11 +784,11 @@ class Otentikasi
     public function updateAccountValidation($dataaccount)
     {
         /* Which rules to use to validation (based on config) */
-        $rules['username'] = 'required|alpha_dash'.'|min:'. Config::get('keamanan.username_min_length').'|max:'. Config::get('keamanan.username_max_length');
+        $rules['username'] = 'required|alpha_dash'.'|min:'. Config::get('otentikasi.username_min_length').'|max:'. Config::get('otentikasi.username_max_length');
         $rules['email'] = 'required|email';
         if (strlen($dataaccount['password']) > 0 || strlen($dataaccount['password_confirmation']) > 0) {
-            $rules['password'] = 'required|confirmed'.'|min:'. Config::get('keamanan.password_min_length').'|max:'. Config::get('keamanan.password_max_length');
-            $rules['password_confirmation'] = 'required'.'|min:'. Config::get('keamanan.password_min_length').'|max:'. Config::get('keamanan.password_max_length');
+            $rules['password'] = 'required|confirmed'.'|min:'. Config::get('otentikasi.password_min_length').'|max:'. Config::get('otentikasi.password_max_length');
+            $rules['password_confirmation'] = 'required'.'|min:'. Config::get('otentikasi.password_min_length').'|max:'. Config::get('otentikasi.password_max_length');
         }
 
         /* run the validation rules on the inputs from the form */
