@@ -65,17 +65,8 @@ class CreateUsersTable extends Migration {
 			$table->timestamps();
 		});
 
-		Schema::create('sessions', function(Blueprint $table)
-		{
-			$table->string('id')->unique();
-			$table->text('payload');
-			$table->integer('last_activity');
-			$table->text('user_data')->nullable();
-			$table->string('user_agent', 150)->nullable();
-			$table->string('ip_address', 50)->nullable();
-		});
 
-		Schema::create('password_reminders', function(Blueprint $table)
+		Schema::create('password_reminders', function(Blueprint $table)  /* build from laravel, i can not delete this */
 		{
 			$table->string('email')->index();
 			$table->string('token')->index();
@@ -99,7 +90,6 @@ class CreateUsersTable extends Migration {
 		Schema::drop('users');
 		Schema::drop('userprofiles');
 		Schema::drop('login_attempts');
-		Schema::drop('sessions');
 		Schema::drop('password_reminders');
 		Schema::drop('groups');
 	}
